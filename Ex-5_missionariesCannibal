@@ -1,0 +1,64 @@
+from collections import deque
+class State:
+    def __init__(self, missionaries, cannibals, boat, action="Initial", prev=None):
+        self.missionaries = missionaries  
+        self.cannibals = cannibals  
+        self.boat = boat  
+        self.action = action  
+        self.prev = prev  
+def is_valid(state):
+    if state.missionaries < 0 or state.missionaries > 3:
+        return False
+    if state.cannibals < 0 or state.cannibals > 3:
+        return False
+    if state.missionaries > 0 and state.missionaries < state.cannibals:
+        return False
+    if state.missionaries < 3 and (3 - state.missionaries) < (3 - state.cannibals):
+        return False
+    return True
+def generate_next_states(state):
+    next_states = []
+    if state.boat == 0:  
+        for m in range(3):
+            for c in range(3):
+                if m + c > 0 and m + c <= 2:
+                    next_state = State(state.missionaries - m, state.cannibals - c, 1, f"Take {m} missionaries and {c} cannibals to the right bank", state)
+                    if is_valid(next_state):
+                        next_states.append(next_state)
+    else:  
+        for m in range(3):
+            for c in range(3):
+                if m + c > 0 and m + c <= 2:
+                    next_state = State(state.missionaries + m, state.cannibals + c, 0, f"Take {m} missionaries and {c} cannibals to the left bank", state)
+                    if is_valid(next_state):
+                        next_states.append(next_state)
+    return next_states
+def missionaries_and_cannibals():
+    start_state = State(3, 3, 0)
+    goal_state = State(0, 0, 1)
+    visited = set()
+    queue = deque([start_state])
+    while queue:
+        state = queue.popleft()
+        visited.add((state.missionaries, state.cannibals, state.boat))
+        if state.missionaries == goal_state.missionaries and state.cannibals == goal_state.cannibals and state.boat == goal_state.boat:
+            return state
+        next_states = generate_next_states(state)
+        for next_state in next_states:
+            if (next_state.missionaries, next_state.cannibals, next_state.boat) not in visited:
+                queue.append(next_state)
+    return None
+def print_solution(solution):
+    path = []
+    while solution:
+        path.append((solution.missionaries, solution.cannibals, solution.action))
+        solution = solution.prev
+    path.reverse()
+    for i, (m, c, action) in enumerate(path):
+        print(f"Step {i+1}: {action}, Left bank: {m} missionaries, {c} cannibals")
+solution = missionaries_and_cannibals()
+if solution:
+    print("Solution found:")
+    print_solution(solution)
+else:
+    print("No solution found.")
