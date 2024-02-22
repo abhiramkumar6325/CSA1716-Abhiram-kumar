@@ -1,0 +1,47 @@
+import heapq
+class Graph:
+    def __init__(self):
+        self.vertices = {}
+    def add_vertex(self, name, edges):
+        self.vertices[name] = edges
+    def heuristic(self, start, goal):
+        return abs(start[0] - goal[0]) + abs(start[1] - goal[1])
+    def astar(self, start, goal):
+        frontier = []
+        heapq.heappush(frontier, (0, start))
+        came_from = {}
+        cost_so_far = {}
+        came_from[start] = None
+        cost_so_far[start] = 0
+        while frontier:
+            current_cost, current_node = heapq.heappop(frontier)
+            if current_node == goal:
+                break
+            for next_node in self.vertices[current_node]:
+                new_cost = cost_so_far[current_node] + self.vertices[current_node][next_node]
+                if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
+                    cost_so_far[next_node] = new_cost
+                    priority = new_cost + self.heuristic(goal, next_node)
+                    heapq.heappush(frontier, (priority, next_node))
+                    came_from[next_node] = current_node
+        path = []
+        current = goal
+        while current:
+            path.append(current)
+            current = came_from[current]
+        path.reverse()
+        return path
+graph = Graph()
+graph.add_vertex((0, 0), {(1, 0): 1, (0, 1): 1})
+graph.add_vertex((1, 0), {(0, 0): 1, (1, 1): 1, (2, 0): 1})
+graph.add_vertex((0, 1), {(0, 0): 1, (1, 1): 1, (0, 2): 1})
+graph.add_vertex((1, 1), {(0, 1): 1, (1, 0): 1, (1, 2): 1, (2, 1): 1})
+graph.add_vertex((0, 2), {(0, 1): 1, (1, 2): 1})
+graph.add_vertex((2, 0), {(1, 0): 1, (2, 1): 1})
+graph.add_vertex((1, 2), {(0, 2): 1, (1, 1): 1, (2, 2): 1})
+graph.add_vertex((2, 1), {(1, 1): 1, (2, 0): 1, (2, 2): 1})
+graph.add_vertex((2, 2), {(1, 2): 1, (2, 1): 1})
+start = (0, 0)
+goal = (2, 2)
+path = graph.astar(start, goal)
+print("Shortest path from", start, "to", goal, ":", path)
