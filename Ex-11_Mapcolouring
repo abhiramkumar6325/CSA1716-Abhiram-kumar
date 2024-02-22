@@ -1,0 +1,57 @@
+class CSP:
+    def __init__(self, variables, domains, constraints):
+        self.variables = variables
+        self.domains = domains
+        self.constraints = constraints
+    def is_consistent(self, variable, value, assignment):
+        for neighbor in self.constraints[variable]:
+            if neighbor in assignment and assignment[neighbor] == value:
+                return False
+        return True
+    def backtracking_search(self):
+        return self.backtrack({}, set(self.variables))
+    def backtrack(self, assignment, unassigned):
+        if len(assignment) == len(self.variables):
+            return assignment
+        if not unassigned:
+            return None
+        var = self.select_unassigned_variable(unassigned)
+        for value in self.order_domain_values(var, assignment):
+            if self.is_consistent(var, value, assignment):
+                assignment[var] = value
+                result = self.backtrack(assignment, unassigned - {var})
+                if result is not None:
+                    return result
+                del assignment[var]
+        return None
+    def select_unassigned_variable(self, unassigned):
+        return min(unassigned, key=lambda var: len(self.constraints[var]))
+    def order_domain_values(self, var, assignment):
+        return self.domains[var]
+variables = ['Western Australia', 'Northern Territory', 'South Australia', 'Queensland', 'New South Wales', 'Victoria', 'Tasmania']
+domains = {
+    'Western Australia': ['Red', 'Green', 'Blue'],
+    'Northern Territory': ['Red', 'Green', 'Blue'],
+    'South Australia': ['Red', 'Green', 'Blue'],
+    'Queensland': ['Red', 'Green', 'Blue'],
+    'New South Wales': ['Red', 'Green', 'Blue'],
+    'Victoria': ['Red', 'Green', 'Blue'],
+    'Tasmania': ['Red', 'Green', 'Blue']
+}
+constraints = {
+    'Western Australia': ['Northern Territory', 'South Australia'],
+    'Northern Territory': ['Western Australia', 'South Australia', 'Queensland'],
+    'South Australia': ['Western Australia', 'Northern Territory', 'Queensland', 'New South Wales', 'Victoria'],
+    'Queensland': ['Northern Territory', 'South Australia', 'New South Wales'],
+    'New South Wales': ['South Australia', 'Queensland', 'Victoria'],
+    'Victoria': ['South Australia', 'New South Wales', 'Tasmania'],
+    'Tasmania': ['Victoria']
+}
+csp = CSP(variables, domains, constraints)
+solution = csp.backtracking_search()
+if solution:
+    print("Solution found:")
+    for var, value in solution.items():
+        print(f"{var}: {value}")
+else:
+    print("No solution found.")
