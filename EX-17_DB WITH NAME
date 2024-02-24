@@ -1,0 +1,17 @@
+% Facts Representing name and date of birth (DOB)
+dob(john, date(1990, 5, 15)).
+dob(emma, date(1985, 10, 20)).
+dob(sophia, date(1995, 3, 8)).
+dob(liam, date(1980, 7, 12)).
+dob(olivia, date(1992, 12, 25)).
+dob(noah, date(1988, 9, 30)).
+
+% Predicates to retrieve information
+name_dob(Name, DOB) :- dob(Name, DOB).
+
+% Predicate to calculate age
+current_year(2024).
+age(Name, Age) :-
+    dob(Name, date(Year, _, _)),
+    current_year(CurrentYear),
+    Age is CurrentYear - Year.
