@@ -1,0 +1,97 @@
+import numpy as np
+from collections import Counter
+import math
+
+class DecisionTree:
+    def __init__(self):
+        self.tree = {}
+
+    def entropy(self, y):
+        total_samples = len(y)
+        class_counts = Counter(y)
+        entropy = 0
+        for count in class_counts.values():
+            probability = count / total_samples
+            entropy += -probability * math.log2(probability)
+        return entropy
+
+    def information_gain(self, X, y, feature_index):
+        total_entropy = self.entropy(y)
+        feature_values = set(X[:, feature_index])
+        new_entropy = 0
+        for value in feature_values:
+            subset_y = y[X[:, feature_index] == value]
+            new_entropy += (len(subset_y) / len(y)) * self.entropy(subset_y)
+        return total_entropy - new_entropy
+
+    def get_best_split(self, X, y):
+        num_features = X.shape[1]
+        best_feature = None
+        best_information_gain = -1
+        for i in range(num_features):
+            gain = self.information_gain(X, y, i)
+            if gain > best_information_gain:
+                best_information_gain = gain
+                best_feature = i
+        return best_feature
+
+    def fit(self, X, y):
+        X = np.array(X)  # Convert to NumPy array
+        y = np.array(y)  # Convert to NumPy array
+        self.tree = self._grow_tree(X, y)
+
+    def _grow_tree(self, X, y):
+        if len(set(y)) == 1:
+            return {'class': y[0]}
+        if X.shape[1] == 0:
+            return {'class': Counter(y).most_common(1)[0][0]}
+        best_feature = self.get_best_split(X, y)
+        feature_values = set(X[:, best_feature])
+        node = {'feature': best_feature}
+        for value in feature_values:
+            X_subset, y_subset = X[X[:, best_feature] == value], y[X[:, best_feature] == value]
+            node[value] = self._grow_tree(X_subset, y_subset)
+        return node
+
+    def predict(self, X):
+        X = np.array(X)  # Convert to NumPy array
+        return [self._predict_single(sample, self.tree) for sample in X]
+
+    def _predict_single(self, sample, tree):
+        if 'class' in tree:
+            return tree['class']
+        feature_value = sample[tree['feature']]
+        if feature_value in tree:
+            return self._predict_single(sample, tree[feature_value])
+        return Counter(tree).most_common(1)[0][0]
+
+# Example usage:
+X_train = [
+    ['Sunny', 'Hot', 'High', False],
+    ['Sunny', 'Hot', 'High', True],
+    ['Overcast', 'Hot', 'High', False],
+    ['Rain', 'Mild', 'High', False],
+    ['Rain', 'Cool', 'Normal', False],
+    ['Rain', 'Cool', 'Normal', True],
+    ['Overcast', 'Cool', 'Normal', True],
+    ['Sunny', 'Mild', 'High', False],
+    ['Sunny', 'Cool', 'Normal', False],
+    ['Rain', 'Mild', 'Normal', False],
+    ['Sunny', 'Mild', 'Normal', True],
+    ['Overcast', 'Mild', 'High', True],
+    ['Overcast', 'Hot', 'Normal', False],
+    ['Rain', 'Mild', 'High', True]
+]
+
+y_train = ['No', 'No', 'Yes', 'Yes', 'Yes', 'No', 'Yes', 'No', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'No']
+
+X_test = [
+    ['Sunny', 'Cool', 'High', False],
+    ['Rain', 'Mild', 'Normal', True],
+    ['Overcast', 'Hot', 'High', True]
+]
+
+tree = DecisionTree()
+tree.fit(X_train, y_train)
+predictions = tree.predict(X_test)
+print("Predictions:", predictions)
